@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.4, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="500px" height="500px" viewBox="0 0 272.863 272.863" enable-background="new 0 0 272.863 272.863"
+	 xml:space="preserve">
+<!-- Center circe -->
+<ellipse fill="#9acd32" stroke="#000000" stroke-width="0.8" stroke-miterlimit="10" cx="250" cy="250" rx="25" ry="25"/>
+
+<!-- Stem -->
+<polygon fill="#6b8e23" fill-opacity="0.9" points="240,275 240,450 260,450 "/>
+
+<!-- Leaf -->
+<polygon fill="#6b8e23" fill-opacity="0.9" points="279,360 279,400 239,380 "/>
+<polygon fill="#6b8e23" fill-opacity="0.9" points="279,360 279,400 319,380 "/>
+
+<!-- Petals -->
+<ellipse fill="#cd5c5c" fill-opacity="0.75" stroke="#000000" stroke-width="0.8" stroke-miterlimit="10" cx="250" cy="310" rx="25" ry="50"/>
+<ellipse fill="#cd5c5c" fill-opacity="0.75" stroke="#000000" stroke-width="0.8" stroke-miterlimit="10" cx="310" cy="250" rx="50" ry="25"/>
+<ellipse fill="#cd5c5c" fill-opacity="0.75" stroke="#000000" stroke-width="0.8" stroke-miterlimit="10" cx="250" cy="190" rx="25" ry="50"/>
+<ellipse fill="#cd5c5c" fill-opacity="0.75" stroke="#000000" stroke-width="0.8" stroke-miterlimit="10" cx="190" cy="250" rx="50" ry="25"/>
+</svg>
