@@ -38,10 +38,11 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
   Vector2D c = transform(Vector2D(    0    ,svg.height)); c.x--; c.y--;
   Vector2D d = transform(Vector2D(svg.width,svg.height)); d.x++; d.y--;
 
-  rasterize_line(a.x, a.y, b.x, b.y, Color::Black);
-  rasterize_line(a.x, a.y, c.x, c.y, Color::Black);
-  rasterize_line(d.x, d.y, b.x, b.y, Color::Black);
-  rasterize_line(d.x, d.y, c.x, c.y, Color::Black);
+  // Disable outer polygon
+  // rasterize_line(a.x, a.y, b.x, b.y, Color::Black);
+  // rasterize_line(a.x, a.y, c.x, c.y, Color::Black);
+  // rasterize_line(d.x, d.y, b.x, b.y, Color::Black);
+  // rasterize_line(d.x, d.y, c.x, c.y, Color::Black);
 
   // resolve and send to render target
   resolve();
