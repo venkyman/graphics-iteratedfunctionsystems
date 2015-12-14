@@ -224,8 +224,8 @@ void SoftwareRendererImp::draw_fractal( Fractal& fractal ) {
   Vector2D transformed = transform(point);
   rasterize_point( transformed.x, transformed.y, fractal.style.fillColor );
   
-  // Repeat for 1000,000 iterations
-  for ( long iter = 0; iter < 1000000L; iter++ ) {
+  // Repeat for given number of iterations
+  for ( long iter = 0; iter < fractal.iterations; iter++ ) {
     double rand = (double) std::rand() / RAND_MAX;
     double cumulative = 0;
     for ( std::vector<Transformation>::iterator tIt = fractal.transformations.begin();

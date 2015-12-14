@@ -310,8 +310,9 @@ void SVGParser::parseLine( XMLElement* xml, Line* line ) {
 
 void SVGParser::parseFractal( XMLElement* xml, Fractal* fractal ) {
   XMLElement* seedElement = xml->FirstChildElement();
-  fractal->seed = Vector2D(seedElement->FloatAttribute( "x" ),
-                           seedElement->FloatAttribute( "y" ));
+  fractal->iterations = xml->IntAttribute("iterations");
+  fractal->seed = Vector2D(seedElement->FloatAttribute("x"),
+                           seedElement->FloatAttribute("y"));
   XMLElement* transformationElement = seedElement->NextSiblingElement();
   while (transformationElement) {
     fractal->transformations.push_back(

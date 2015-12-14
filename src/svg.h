@@ -125,6 +125,7 @@ struct Transformation {
   
 struct Fractal : SVGElement {
   Fractal() : SVGElement ( FRACTAL ) { }
+  long iterations;
   Vector2D seed;
   std::vector<Transformation> transformations;
 };

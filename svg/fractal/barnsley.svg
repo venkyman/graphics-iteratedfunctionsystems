@@ -7,7 +7,7 @@ height="1000px"
 viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000"
 xml:space="preserve">
 
-<fractal>
+<fractal iterations="1000000">
   <!-- A Barnsley fern -->
   <!--
   The transformations are of the form

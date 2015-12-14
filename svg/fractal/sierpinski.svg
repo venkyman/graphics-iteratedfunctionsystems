@@ -7,12 +7,12 @@ height="1000px"
 viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000"
 xml:space="preserve">
 
-<fractal>
+<fractal iterations="1000000">
   <!-- A Sierpinski triangle with coordinates (300, 700), (700, 700) and (500, 354.59) and seed point (500, 584.86) -->
-	<seed x="500" y="584.86"/>
+  <seed x="500" y="584.86"/>
   <transformation prob="0.3333" a="0.5" b="0" c="0" d="0.5" e="150" f="350" />
-	<transformation prob="0.3333" a="0.5" b="0" c="0" d="0.5" e="350" f="350" />
-	<transformation prob="0.3333" a="0.5" b="0" c="0" d="0.5" e="250" f="177.295" />
+  <transformation prob="0.3333" a="0.5" b="0" c="0" d="0.5" e="350" f="350" />
+  <transformation prob="0.3333" a="0.5" b="0" c="0" d="0.5" e="250" f="177.295" />
 </fractal>
 
 </svg>
