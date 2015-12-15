@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <vector>
+#include <queue>
 #include <iostream>
 #include <algorithm>
 
@@ -13,6 +14,10 @@ using namespace std;
 namespace CMU462 {
 
 uint8_t* supersample_target;
+double* supersample_target_irradiance;
+double* distances;
+bool* visited;
+queue<Vector2D> bfsQueue; 
 Sampler2DImp sampler(SampleMethod method = TRILINEAR);
 
 // Implements SoftwareRenderer //
@@ -21,6 +26,20 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
 
   // allocate memory for supersample target
   supersample_target = new uint8_t[4 * sample_rate * target_w * sample_rate * target_h]();
+
+  // allocate memory for supersample target's irradiance cache
+  supersample_target_irradiance = new double[sample_rate * target_w * sample_rate * target_h]();
+
+  // allocate memory for the background target
+  distances = new double[sample_rate * target_w * sample_rate * target_h]();
+
+  // allocated visited flags array
+  visited = new bool[sample_rate * target_w * sample_rate * target_h]();
+
+  // clear the bfs queue
+  while (!bfsQueue.empty()) {
+    bfsQueue.pop();
+  }
 
   // draw all elements
   for ( size_t i = 0; i < svg.elements.size(); ++i ) {
@@ -47,9 +66,16 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
   // resolve and send to render target
   resolve();
   
-  // free the supersample target
+  // free objects
   delete[] supersample_target;
+  delete[] supersample_target_irradiance;
+  delete[] distances;
+  delete[] visited;
 
+  // clear the bfs queue
+  while (!bfsQueue.empty()) {
+    bfsQueue.pop();
+  }
 }
 
 void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
@@ -217,15 +243,113 @@ void SoftwareRendererImp::draw_polygon( Polygon& polygon ) {
     }
   }
 }
+
+void SoftwareRendererImp::add_to_queue(int x, int y) {
+  bfsQueue.push(Vector2D(x, y));
+  visited[x + y * sample_rate * target_w] = true;
+  // Set distance of fractal samples to -1 so that at least
+  // a few background samples have 0 distance (easier when normalizing
+  // later).
+  distances[x + y * sample_rate * target_w] = -1;
+}
+
+void SoftwareRendererImp::fill_background(Color color) {
+  // Do a bread first search through the entire image to compute the
+  // (Manhattan) distance from every background sample to the closest
+  // fractal sample.
+  while (!bfsQueue.empty()) {
+    Vector2D coordinate = bfsQueue.front();
+    bfsQueue.pop();
+    int x = coordinate.x;
+    int y = coordinate.y;
+    
+    // Add the four neighbors to the queue if they have not been added already.
+    if ( x - 1 >= 0
+          && y >= 0 && y < sample_rate * target_h
+          && !visited[(x - 1) + y * sample_rate * target_w] ) {
+      distances[(x - 1) + y * sample_rate * target_w] =
+        distances[x + y * sample_rate * target_w] + 1;
+      visited[(x - 1) + y * sample_rate * target_w] = true;
+      bfsQueue.push(Vector2D(x - 1, y));
+    }
+    if ( x + 1 < sample_rate * target_w
+          && y >= 0 && y < sample_rate * target_h
+          && !visited[(x + 1) + y * sample_rate * target_w] ) {
+      distances[(x + 1) + y * sample_rate * target_w] =
+        distances[x + y * sample_rate * target_w] + 1;
+      visited[(x + 1) + y * sample_rate * target_w] = true;
+      bfsQueue.push(Vector2D(x + 1, y));
+    }
+    if ( x >= 0 && x < sample_rate * target_w
+          && y - 1 >= 0
+          && !visited[x + (y - 1) * sample_rate * target_w] ) {
+      distances[x + (y - 1) * sample_rate * target_w] =
+        distances[x + y * sample_rate * target_w] + 1;
+      visited[x + (y - 1) * sample_rate * target_w] = true;
+      bfsQueue.push(Vector2D(x, y - 1));
+    }
+    if ( x >= 0 && x < sample_rate * target_w
+          && y + 1 < sample_rate * target_h
+          && !visited[x + (y + 1) * sample_rate * target_w] ) {
+      distances[x + (y + 1) * sample_rate * target_w] =
+        distances[x + y * sample_rate * target_w] + 1;
+      visited[x + (y + 1) * sample_rate * target_w] = true;
+      bfsQueue.push(Vector2D(x, y + 1));
+    }
+  }
+
+  // Find the maximum distance to normalize with.
+  double max_dist = 0.f;
+  for (int x = 0; x < sample_rate * target_w; x++) {
+    for (int y = 0; y < sample_rate * target_h; y++) {
+      max_dist = max(max_dist, distances[x + y * sample_rate * target_w]);
+    }
+  }
+
+  // Normalize with the maximum distance to scale values to
+  // the range [0, 1]
+  for (int x = 0; x < sample_rate * target_w; x++) {
+    for (int y = 0; y < sample_rate * target_h; y++) {
+      // Taking the power is just a hack so that values are pushed closer to 1
+      // rather than 0.
+      distances[x + y * sample_rate * target_w] =
+        pow(distances[x + y * sample_rate * target_w] / max_dist, 1.0 / 2.0);
+    }
+  }
+
+  // Copy to super sample buffer
+  for (int x = 0; x < sample_rate * target_w; x++) {
+    for (int y = 0; y < sample_rate * target_h; y++) {
+      // Fill only background and not foreground samples
+      if (distances[x + y * sample_rate * target_w] >= 0.f) {
+        // Mix the given color and white by a ratio based on the sample's distance
+        // from the closest foreground sample.
+        double w = distances[x + y * sample_rate * target_w];
+        Color xyColor = w * color + (1.f - w) * Color::White;
+        // Divide x and y by sample_rate to compensate for the multiplication
+        // by the same sample_rate done by rasterize_point.
+        rasterize_point((float) (x + 0.5f) / (float) sample_rate,
+          (float) (y + 0.5f) / (float) sample_rate, xyColor);
+      }
+    }
+  }
+}
   
 void SoftwareRendererImp::draw_fractal( Fractal& fractal ) {
+  // Number of iterations to ignore as recommended in literature
+  int ignore_iterations = 10;
+
   // First print the seed point
   Vector2D point = fractal.seed;
-  Vector2D transformed = transform(point);
-  rasterize_point( transformed.x, transformed.y, fractal.style.fillColor );
+  Vector2D transformed;
+  // Ignore the first few iterations as recommended in literature.
+  if (ignore_iterations == 0) {
+    transformed = transform(point);
+    rasterize_point( transformed.x, transformed.y, fractal.style.fillColor );
+  }
   
   // Repeat for given number of iterations
-  for ( long iter = 0; iter < fractal.iterations; iter++ ) {
+  for ( long iter = 0; iter < fractal.iterations * sample_rate * sample_rate; iter++ ) {
     double rand = (double) std::rand() / RAND_MAX;
     double cumulative = 0;
     for ( std::vector<Transformation>::iterator tIt = fractal.transformations.begin();
@@ -237,12 +361,22 @@ void SoftwareRendererImp::draw_fractal( Fractal& fractal ) {
         double new_x = tIt->a * point.x + tIt->b * point.y + tIt->e;
         double new_y = tIt->c * point.x + tIt->d * point.y + tIt->f;
         point = Vector2D( new_x, new_y );
-        transformed = transform(point);
-        rasterize_point( transformed.x, transformed.y, fractal.style.fillColor );
+        // Ignore the first few iterations as recommended in literature.
+        // The minus 1 is because we already ignored the seed.
+        if (iter > ignore_iterations - 1) {
+          transformed = transform(point);
+          rasterize_point_irradiance( transformed.x, transformed.y );
+        }
         break;
       }
+    }
   }
-  }
+
+  // Copy from irradiance cache to sample buffer
+  irradiance_to_sample_buffer(fractal.style.fillColor);
+
+  // Fill background samples
+  fill_background(fractal.style.fillColor);
 }
 
 void SoftwareRendererImp::draw_ellipse( Ellipse& ellipse ) {
@@ -327,6 +461,80 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color element ) {
   // fill sample
   float_to_uint8(&supersample_target[4 * (sx + sy * sample_rate * target_w)], &blended.r);
 
+}
+
+void SoftwareRendererImp::rasterize_point_irradiance( double x, double y ) {
+  // Compute the coordinates in the super sample target
+  double sx = x * sample_rate;
+  double sy = y * sample_rate;
+
+  // check bounds ( make sure we'll always have four neighbors
+  if ( sx < 0.5f || sx > sample_rate * target_w - 0.5f ) return;
+  if ( sy < 0.5f || sy > sample_rate * target_h - 0.5f ) return;
+
+  // Compute the top left sample coordinate
+  int l;
+  int u;
+  
+  if (sx >= floor(sx) + 0.5f) {
+    l = floor(sx);
+  } else {
+    l = floor(sx) - 1;
+  }
+
+  if (sy >= floor(sy) + 0.5f) {
+    u = floor(sy);
+  } else {
+    u = floor(sy) - 1;
+  }
+
+  double l_ratio = sx - ((double) l + 0.5f);
+  double u_ratio = sy - ((double) u + 0.5f);
+
+  supersample_target_irradiance[l + u * sample_rate * target_w] += (1.f - l_ratio) * (1.f - u_ratio);
+  supersample_target_irradiance[l + (u + 1) * sample_rate * target_w] += (1.f - l_ratio) * (u_ratio);
+  supersample_target_irradiance[(l + 1) + u * sample_rate * target_w] += l_ratio * (1.f - u_ratio);
+  supersample_target_irradiance[(l + 1) + (u + 1) * sample_rate * target_w] += l_ratio * u_ratio;
+
+  add_to_queue(l, u);
+  add_to_queue(l, u + 1);
+  add_to_queue(l + 1, u);
+  add_to_queue(l + 1, u + 1);
+}
+
+void SoftwareRendererImp::irradiance_to_sample_buffer(Color color) {
+  // Find the maximum value
+  double max_val = 0.f;
+  for (int x = 0; x < sample_rate * target_w; x++) {
+    for (int y = 0; y < sample_rate * target_h; y++) {
+      max_val = max(max_val, supersample_target_irradiance[x + y * sample_rate * target_w]);
+    }
+  }
+
+  // Normalize using the max value
+  for (int x = 0; x < sample_rate * target_w; x++) {
+    for (int y = 0; y < sample_rate * target_h; y++) {
+      // Taking the power is just a hack so that values are pushed closer to 1
+      // rather than 0 (hence producing a sharper image).
+      supersample_target_irradiance[x + y * sample_rate * target_w] =
+        pow(supersample_target_irradiance[x + y * sample_rate * target_w] / max_val, 1.0 / 3.0);
+    }
+  }
+
+  // copy to super sample buffer
+  for (int x = 0; x < sample_rate * target_w; x++) {
+    for (int y = 0; y < sample_rate * target_h; y++) {
+      if (supersample_target_irradiance[x + y * sample_rate * target_w] != 0) {
+        // mix the given color and black by a ratio based on the sample's irradiance.
+        double w = supersample_target_irradiance[x + y * sample_rate * target_w];
+        Color xyColor = w * color + (1.f - w) * Color::Black;
+        // Divide x and y by sample_rate to compensate for the multiplication
+        // by the same sample_rate done by rasterize_point.
+        rasterize_point((float) (x + 0.5f) / (float) sample_rate,
+          (float) (y + 0.5f) / (float) sample_rate, xyColor);
+      }
+    }
+  }
 }
 
 int get_octant(float x0, float y0, float x1, float y1) {

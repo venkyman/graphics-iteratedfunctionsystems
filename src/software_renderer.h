@@ -117,6 +117,18 @@ class SoftwareRendererImp : public SoftwareRenderer {
   // rasterize a point
   void rasterize_point( float x, float y, Color color );
 
+  // rasterize a point with irradiance caching
+  void rasterize_point_irradiance( double x, double y );
+
+  // copy from irradiance cache to sample buffer
+  void irradiance_to_sample_buffer(Color color);
+
+  // fills the background once the foreground fractal has been printed
+  void fill_background(Color color);
+
+  // add a pixel to the queue
+  void add_to_queue(int x, int y);
+
   // rasterize a line
   void rasterize_line( float x0, float y0,
                        float x1, float y1,
