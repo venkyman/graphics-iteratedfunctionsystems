@@ -11,9 +11,9 @@ xml:space="preserve">
   <!-- A Barnsley fern -->
   <!--
   The transformations are of the form
-  [100   0 500  * f * [0.01 0    -5
-     0 100   0         0    0.01  0
-     0   0   1]        0    0     1]
+  [1  0    0  * [100   0 500  * f * [0.01 0    -5  * [1  0    0
+   0 -1 1000       0 100   0         0    0.01  0     0 -1 1000
+   0  0    1]      0   0   1]        0    0     1]    0  0    1]
 
   where f can be one of
   [0 0    0   or  [ 0.85 0.04 0      or  [0.20 -0.26 0      or  [-0.15 0.28 0
