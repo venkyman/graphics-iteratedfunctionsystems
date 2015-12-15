@@ -7,7 +7,7 @@ height="1000px"
 viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000"
 xml:space="preserve">
 
-<fractal iterations="1000000" fill="#8A0808">
+<fractal iterations="1000000" fill="#2F0B3A">
   <!-- A Tower with coordinates (200, 1000), (800, 1000) and (500, 0) and seed point (500, 666.67) -->
   <seed x="500" y="666.67"/>
   <transformation prob="0.1666" a="0.5" b="0" c="0" d="0.35" e="100" f="500" />

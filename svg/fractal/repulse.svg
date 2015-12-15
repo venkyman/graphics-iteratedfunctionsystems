@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.4, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+width="1000px"
+height="1000px"
+viewBox="0 0 1000 1000" enable-background="new 0 0 1000 1000"
+xml:space="preserve">
+
+<fractal iterations="1000000" fill="#8A0829">
+  <!-- A variation of Sierpinski triangle with coordinates (300, 700), (700, 700) and (500, 346.41) and seed point (500, 582.14).
+       Instead of moving half way towards a selected vertex, we move the same distance outside the vertex.-->
+  <seed x="500" y="582.14"/>
+  <transformation prob="0.3333" a="-0.5" b="0" c="0" d="-0.5" e="450" f="1050" />
+  <transformation prob="0.3333" a="-0.5" b="0" c="0" d="-0.5" e="1050" f="1050" />
+  <transformation prob="0.3333" a="-0.5" b="0" c="0" d="-0.5" e="750" f="519.615" />
+</fractal>
+
+</svg>
